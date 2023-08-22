@@ -1,0 +1,80 @@
+seed_everything: 15
+trainer:
+  accelerator: auto
+  strategy: auto
+  devices: 1
+  num_nodes: 1
+  precision: 16
+  logger:
+    class_path: pytorch_lightning.loggers.tensorboard.TensorBoardLogger
+    init_args:
+      save_dir: './'
+      name: lightning_logs
+      prefix: ''
+      default_hp_metric: false
+      log_graph: true
+    dict_kwargs:
+      max_queue: 100
+  callbacks:
+    - class_path: ModelCheckpoint
+      init_args:
+        monitor: 'val/auc'
+        save_top_k: 1
+        mode: 'max'
+        auto_insert_metric_name: false
+        save_last: true
+        filename: 'epoch={epoch}-val_auc={val/auc:.4f}'
+    - class_path: LearningRateMonitor
+      init_args:
+        logging_interval: 'epoch'
+    - class_path: TQDMProgressBar
+      init_args:
+        refresh_rate: 10
+  max_epochs: -1
+  limit_train_batches: null
+  limit_val_batches: null
+  limit_test_batches: null
+  limit_predict_batches: null
+  val_check_interval: null
+  check_val_every_n_epoch: 1
+  num_sanity_val_steps: 0
+  log_every_n_steps: null
+  enable_checkpointing: true
+  enable_progress_bar: true
+  enable_model_summary: null
+  accumulate_grad_batches: 1
+  gradient_clip_val: null
+  gradient_clip_algorithm: null
+  deterministic: null
+  benchmark: null
+  inference_mode: true
+  use_distributed_sampler: true
+model:
+  learning_rate: 1e-4
+data:
+  root: /space/derma-data/derma-hist-test/
+  batch_size: 1
+  resolution: 0.1
+  transforms:
+    class_path: torchvision.transforms.Compose
+    init_args:
+      transforms:
+        - class_path: torchvision.transforms.RandomVerticalFlip
+          init_args:
+            p: 0.5
+        - class_path: torchvision.transforms.RandomHorizontalFlip
+          init_args:
+            p: 0.5
+        - class_path: torchvision.transforms.RandomRotation
+          init_args:
+            degrees: 45
+        - class_path: torchvision.transforms.ColorJitter
+          init_args:
+            brightness: 0.25
+            contrast: 0.25
+            saturation: 0.25
+            hue: 0.25
+        - class_path: torchvision.transforms.Normalize
+          init_args:
+            mean: [0.485, 0.456, 0.406]
+            std: [0.229, 0.224, 0.225]
